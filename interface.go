@@ -22,6 +22,7 @@ type Graph interface {
 	Children() map[string]GraphNode
 	AddChild(GraphNode)
 	Walk()
+	MachineOutput(string, io.Writer)
 	Find(string) GraphNode
 }
 

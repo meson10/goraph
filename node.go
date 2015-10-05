@@ -94,6 +94,31 @@ func (self *Node) Append(parent GraphNode, child GraphNode) {
 	parent.AddChild(child)
 }
 
+func (self *Node) MachineOutput(prefix string, w io.Writer) {
+	var log string
+
+	if self.Parent() != nil {
+		dirtyStatus := ",dirty:false"
+		if self.IsDirty() {
+			dirtyStatus = ",dirty:true"
+		}
+
+		if prefix != "" {
+			log = fmt.Sprintf("%v,%v", prefix, self.Id())
+		} else {
+			log = self.Id()
+		}
+
+		w.Write([]byte(log))
+		w.Write([]byte(dirtyStatus))
+		w.Write([]byte("\n"))
+	}
+
+	for _, x := range self.Children() {
+		x.MachineOutput(log, w)
+	}
+}
+
 func (self *Node) Output(indent int, last bool, w io.Writer) {
 	sep := ""
 	if indent > 0 {
@@ -135,7 +160,9 @@ func (self *Node) Output(indent int, last bool, w io.Writer) {
 	w.Write([]byte(log))
 	w.Write([]byte("\n"))
 
-	indent++
+	if indent >= 0 {
+		indent++
+	}
 
 	//Display Notes associated with this node.
 	notes := self.Notes()
