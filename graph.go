@@ -9,6 +9,10 @@ const LEAF = "├"
 const LASTLEAF = "└"
 
 func NewNode(id string) *Node {
+	if id == "" {
+		id = "unknown"
+	}
+
 	x := &Node{id: id}
 	x.SeedTag()
 	x.InitChildren()
