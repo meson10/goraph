@@ -9,13 +9,35 @@ import (
 	"github.com/fatih/color"
 )
 
-const dirty = "*"
+const (
+	dirty     = "*"
+	blank     = ""
+	comma     = ","
+	semiColon = ":"
+)
+
+var MachineReadable bool
+
+func FieldSeperator() string {
+	if MachineReadable {
+		return comma
+	} else {
+		return semiColon
+	}
+}
 
 type Node struct {
-	id       string
-	parent   GraphNode
-	children map[string]GraphNode
+	id        string
+	node_type string
+	parent    GraphNode
+	children  map[string]GraphNode
 	Taggable
+}
+
+func (self *Node) SetType(ntype string) {
+	self.Lock()
+	defer self.Unlock()
+	self.node_type = ntype
 }
 
 func (self *Node) Delete() {
@@ -72,7 +94,7 @@ func (self *Node) RemoveDirty() GraphNode {
 }
 
 func (self *Node) SetDirty() GraphNode {
-	self.SetTag(dirty, "")
+	self.SetTag(dirty, blank)
 	return self
 }
 
@@ -94,23 +116,36 @@ func (self *Node) Append(parent GraphNode, child GraphNode) {
 	parent.AddChild(child)
 }
 
+func (self *Node) DisplayName() string {
+	return self.node_type + FieldSeperator() + self.Id()
+}
+
 func (self *Node) MachineOutput(prefix string, w io.Writer) {
 	var log string
 
 	if self.Parent() != nil {
-		dirtyStatus := ",dirty:false"
-		if self.IsDirty() {
-			dirtyStatus = ",dirty:true"
-		}
-
-		if prefix != "" {
-			log = fmt.Sprintf("%v,%v", prefix, self.Id())
+		if prefix != blank {
+			log = fmt.Sprintf("%v,%v", prefix, self.DisplayName())
 		} else {
-			log = self.Id()
+			log = self.DisplayName()
 		}
 
-		w.Write([]byte(log))
-		w.Write([]byte(dirtyStatus))
+		arr := []string{log}
+
+		for k, v := range self.GetTags() {
+			if k == "*" {
+				continue
+			}
+			arr = append(arr, k)
+			arr = append(arr, v)
+		}
+
+		if self.IsDirty() {
+			arr = append(arr, "dirty")
+			arr = append(arr, "true")
+		}
+
+		w.Write([]byte(strings.Join(arr, comma)))
 		w.Write([]byte("\n"))
 	}
 
@@ -120,7 +155,7 @@ func (self *Node) MachineOutput(prefix string, w io.Writer) {
 }
 
 func (self *Node) Output(indent int, last bool, w io.Writer) {
-	sep := ""
+	sep := blank
 	if indent > 0 {
 		sep += strings.Repeat(TAB, indent-1)
 		if last == true {
@@ -143,7 +178,7 @@ func (self *Node) Output(indent int, last bool, w io.Writer) {
 	//Display Tags associated with this node.
 	tags := self.GetTags()
 	if len(tags) > 0 {
-		tagstr := ""
+		tagstr := blank
 		for k, v := range tags {
 			if k == "*" {
 				continue
@@ -195,5 +230,9 @@ func (self *Node) Output(indent int, last bool, w io.Writer) {
 }
 
 func (self *Node) Walk() {
-	self.Output(0, false, os.Stdout)
+	if MachineReadable == true {
+		self.MachineOutput(blank, os.Stdout)
+	} else {
+		self.Output(0, false, os.Stdout)
+	}
 }

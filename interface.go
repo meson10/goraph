@@ -16,6 +16,7 @@ type GraphNode interface {
 
 type Graph interface {
 	Tagger
+	SetType(string)
 	SetId(string) GraphNode
 	Id() string
 	InitChildren()
