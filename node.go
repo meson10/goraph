@@ -34,6 +34,12 @@ type Node struct {
 	Taggable
 }
 
+func (self *Node) GetType() string {
+	self.RLock()
+	defer self.RUnlock()
+	return self.node_type
+}
+
 func (self *Node) SetType(ntype string) {
 	self.Lock()
 	defer self.Unlock()
@@ -233,6 +239,6 @@ func (self *Node) Walk() {
 	if MachineReadable == true {
 		self.MachineOutput(blank, os.Stdout)
 	} else {
-		self.Output(0, false, os.Stdout)
+		self.Output(0, false, os.Stderr)
 	}
 }

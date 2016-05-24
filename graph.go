@@ -7,10 +7,11 @@ var TAB = "│" + strings.Repeat(" ", 4)
 const SEP = "─── "
 const LEAF = "├"
 const LASTLEAF = "└"
+const UNKNOWN = "unknown"
 
 func NewNode(id string) *Node {
 	if id == "" {
-		id = "unknown"
+		id = UNKNOWN
 	}
 
 	x := &Node{id: id}
