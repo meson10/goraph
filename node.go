@@ -146,6 +146,11 @@ func (self *Node) MachineOutput(prefix string, w io.Writer) {
 			arr = append(arr, v)
 		}
 
+		for i, v := range self.Notes() {
+			arr = append(arr, fmt.Sprintf("Note#%v", i))
+			arr = append(arr, v)
+		}
+
 		if self.IsDirty() {
 			arr = append(arr, "dirty")
 			arr = append(arr, "true")
@@ -160,7 +165,7 @@ func (self *Node) MachineOutput(prefix string, w io.Writer) {
 	}
 }
 
-func (self *Node) Output(indent int, last bool, w io.Writer) {
+func (self *Node) output(dirty bool, indent int, last bool, w io.Writer) {
 	sep := blank
 	if indent > 0 {
 		sep += strings.Repeat(TAB, indent-1)
@@ -174,11 +179,10 @@ func (self *Node) Output(indent int, last bool, w io.Writer) {
 
 	log := fmt.Sprintf("%v%v", sep, self.Id())
 
-	//Display a sweet little star next to the node, if dirty.
-	is_dirty := self.IsDirty()
-
+	is_dirty := dirty || self.IsDirty()
 	if is_dirty == true {
-		log += "[*]"
+		color.Set(color.FgRed)
+		defer color.Unset()
 	}
 
 	//Display Tags associated with this node.
@@ -189,13 +193,9 @@ func (self *Node) Output(indent int, last bool, w io.Writer) {
 			if k == "*" {
 				continue
 			}
-			tagstr += fmt.Sprintf(" %v=>%v", k, v)
+			tagstr += fmt.Sprintf(" %v=%v", k, v)
 		}
 		log += tagstr
-	}
-
-	if is_dirty {
-		color.Set(color.FgRed)
 	}
 
 	w.Write([]byte(log))
@@ -229,16 +229,14 @@ func (self *Node) Output(indent int, last bool, w io.Writer) {
 		} else {
 			last = false
 		}
-		x.Output(indent, last, w)
+		x.output(is_dirty, indent, last, w)
 	}
-
-	color.Unset()
 }
 
 func (self *Node) Walk() {
 	if MachineReadable == true {
 		self.MachineOutput(blank, os.Stdout)
 	} else {
-		self.Output(0, false, os.Stderr)
+		self.output(false, 0, false, os.Stderr)
 	}
 }

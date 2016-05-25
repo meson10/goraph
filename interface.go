@@ -7,7 +7,7 @@ type GraphNode interface {
 	IsDirty() bool
 	RemoveDirty() GraphNode
 	SetDirty() GraphNode
-	Output(int, bool, io.Writer)
+	output(bool, int, bool, io.Writer)
 	SetParent(GraphNode)
 	Parent() GraphNode
 	Delete()
